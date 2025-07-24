@@ -13,7 +13,7 @@ This is a Python-based quiz app that uses the **Groq LLM API** to generate multi
 ## 🖥️ Tech Stack
 
 - Python
-- [Python Chatbot](https://pythonchatbot01.streamlit.app/)
+- [Groq LLM](https://groq.com/)
 - Streamlit
 - dotenv
 
