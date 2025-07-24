@@ -44,7 +44,7 @@ def parse_mcqs(text):
 
 # --- Streamlit App UI ---
 st.set_page_config(page_title="Python Quiz", page_icon="🐍")
-st.title("🧠 Python Quiz using Groq LLM")
+st.title("🧠 Python Quiz")
 
 # Init session
 if "mcqs" not in st.session_state:
