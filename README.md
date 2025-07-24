@@ -10,6 +10,10 @@ This is a Python-based quiz app that uses the **Groq LLM API** to generate multi
 - Built-in restart option for replaying the quiz
 - Clean and responsive UI using Streamlit
 
+## 🚀 Live App
+
+👉 [Click here to play the quiz](https://pythonchatbot01.streamlit.app/)
+
 ## 🖥️ Tech Stack
 
 - Python
