@@ -14,7 +14,7 @@ This is an interactive **MCQ-based quiz app** built with **Streamlit** that uses
 ---
 ## 🚀 Live App
 
-👉 [Click here to play the quiz](https://pythonchatbot01.streamlit.app/)
+👉 [Click here to play the quiz](https://quizchatbot01.streamlit.app/)
 
 ## 🖥️ Tech Stack
 
