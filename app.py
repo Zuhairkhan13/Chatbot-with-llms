@@ -12,9 +12,9 @@ api_key = os.getenv("GROQ_API_KEY")
 client = Groq(api_key=api_key)
 
 # Function to call Groq LLM and get MCQs
-def get_mcqs_from_llm():
+def get_mcqs_from_llm(language):
     prompt = (
-        "Generate 10 unique multiple-choice questions (MCQs) on Python programming. "
+        f"Generate 10 unique multiple-choice questions (MCQs) on {language} programming. "
         "Each question should have 4 options labeled A, B, C, and D, and also provide the correct answer at the end. "
         "Format:\n\n"
         "Q1. What is Python?\nA) Snake\nB) Programming Language\nC) Car\nD) Game\nAnswer: B\n"
@@ -43,13 +43,28 @@ def parse_mcqs(text):
     return parsed
 
 # --- Streamlit App UI ---
-st.set_page_config(page_title="Python Quiz", page_icon="🐍")
-st.title("🧠 Python Quiz")
+st.set_page_config(page_title="Programming Quiz", page_icon="💻")
+st.title("🧠 Programming Quiz")
 
-# Init session
+# Language selection
+languages = ["Python", "Java", "C++", "JavaScript", "C#", "Go", "Ruby", "PHP", "Swift"]
+selected_lang = st.selectbox("📘 Select your programming language:", languages)
+
+# Reset session if language changes
+if "selected_lang" not in st.session_state:
+    st.session_state.selected_lang = selected_lang
+
+if selected_lang != st.session_state.selected_lang:
+    for key in ["mcqs", "score", "current_q", "answers"]:
+        if key in st.session_state:
+            del st.session_state[key]
+    st.session_state.selected_lang = selected_lang
+    st.rerun()
+
+# Init session and load MCQs
 if "mcqs" not in st.session_state:
-    with st.spinner("Generating quiz from LLM..."):
-        raw_mcqs = get_mcqs_from_llm()
+    with st.spinner(f"Generating {selected_lang} quiz from LLM..."):
+        raw_mcqs = get_mcqs_from_llm(selected_lang)
         st.session_state.mcqs = parse_mcqs(raw_mcqs)
         st.session_state.score = 0
         st.session_state.current_q = 0
