@@ -15,8 +15,9 @@ client = Groq(api_key=api_key)
 # Function to call Groq LLM and get MCQs
 def get_mcqs_from_llm(language):
     prompt = (
-        f"Generate 10 unique multiple-choice questions (MCQs) on {language} programming. "
-        "Each question should have 4 options labeled A, B, C, and D, and also provide the correct answer at the end. "
+        f"Generate 10 unique and varied multiple-choice questions (MCQs) on {language} programming. "
+        "Ensure the questions are different from any previously generated ones and cover diverse topics within {language}. "
+        "Each question must have 4 options labeled A, B, C, and D, with only one correct answer provided at the end. "
         "Format:\n\n"
         "Q1. What is Python?\nA) Snake\nB) Programming Language\nC) Car\nD) Game\nAnswer: B\n"
     )
@@ -24,10 +25,10 @@ def get_mcqs_from_llm(language):
     response = client.chat.completions.create(
         messages=[{"role": "user", "content": prompt}],
         model="llama3-8b-8192",
+        temperature=0.9,  # Added to increase randomness
     )
 
     return response.choices[0].message.content
-
 # --- Caching for MCQ generation ---
 @st.cache_data(show_spinner=False)
 def get_mcqs_from_llm_cached(language):
