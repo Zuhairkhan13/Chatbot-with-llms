@@ -263,7 +263,7 @@ if current_q < len(mcqs):
     st.markdown(f"<div style='font-size:1.1rem; font-weight:600; margin-bottom:1rem;'>{q['question']}</div>", unsafe_allow_html=True)
 
     options = [f"{label}) {text}" for label, text in q['options']]
-    selected_option = st.radio("Choose one:", options, key=f"q{current_q}_{uuid.uuid4()}")
+    selected_option = st.radio("Choose one:", options, key=f"q{current_q}_{st.session_state.selected_lang}")
 
     if st.button("✅ Submit Answer"):
         user_ans = selected_option[0]
