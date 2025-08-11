@@ -3,6 +3,7 @@ import os
 from dotenv import load_dotenv
 from groq import Groq
 import re
+import uuid
 
 # Load API key from .env file
 load_dotenv()
@@ -28,7 +29,6 @@ def get_mcqs_from_llm(language):
     return response.choices[0].message.content
 
 # --- Caching for MCQ generation ---
-import streamlit as st  # ensure st is imported at the top
 @st.cache_data(show_spinner=False)
 def get_mcqs_from_llm_cached(language):
     return get_mcqs_from_llm(language)
@@ -49,126 +49,185 @@ def parse_mcqs(text):
     return parsed
 
 # --- Streamlit App UI ---
-st.set_page_config(page_title="Programming Quiz", page_icon="💻")
+st.set_page_config(page_title="Programming Quiz", page_icon="💻", layout="centered")
 
-# --- Custom CSS for beautiful dark UI ---
+# --- Custom CSS for New Color Scheme ---
 st.markdown("""
     <style>
-    body {
-        background: linear-gradient(135deg, #232526 0%, #414345 100%);
+    body, .stApp {
+        background: #0b1524;
+        font-family: 'Inter', 'Roboto', sans-serif;
+        color: #d1d5db;
     }
     .stApp {
-        background: linear-gradient(135deg, #232526 0%, #414345 100%);
-        font-family: 'Segoe UI', 'Roboto', sans-serif;
-        color: #f3f3f3;
+        max-width: 800px;
+        margin: 0 auto;
+        padding: 1rem;
+        background: transparent !important;
+    }
+    /* Ensure main content area has no white background */
+    .main, .st-emotion-cache-uf99v8 {
+        background: transparent !important;
+        box-shadow: none !important;
+        padding: 0 !important;
+        border-radius: 0 !important;
+        color: #d1d5db !important;
+    }
+    h1 {
+        font-size: 2.5rem;
+        color: #f3f4f6;
+        text-align: center;
+        margin-bottom: 0.5rem;
+        text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+    }
+    h4 {
+        font-size: 1.2rem;
+        color: #2dd4bf;
+        text-align: center;
+        margin-bottom: 1.5rem;
     }
     .stButton>button {
         color: #fff;
-        background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
-        border-radius: 8px;
-        padding: 0.5em 2em;
-        font-size: 1.1em;
-        font-weight: bold;
+        background: linear-gradient(90deg, #2dd4bf 0%, #22d3ee 100%);
+        border-radius: 12px;
+        padding: 0.75rem 2rem;
+        font-size: 1rem;
+        font-weight: 600;
         border: none;
-        margin-top: 1em;
-        transition: 0.2s;
-        box-shadow: 0 2px 8px 0 rgba(221,36,118,0.15);
+        width: 100%;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
     .stButton>button:hover {
-        background: linear-gradient(90deg, #dd2476 0%, #ff512f 100%);
-        transform: scale(1.05);
+        background: linear-gradient(90deg, #22d3ee 0%, #2dd4bf 100%);
+        transform: translateY(-2px);
+        box-shadow: 0 6px 16px rgba(0,0,0,0.3);
     }
-    .stRadio>div>label {
-        font-size: 1.1em;
-        margin-bottom: 0.5em;
-        color: #f3f3f3 !important;
-    }
-    .st-bb {
-        background: #232526;
+    .stRadio > div {
+        background: #1e293b;
         border-radius: 10px;
-        padding: 1em;
-        margin-bottom: 1em;
-        color: #f3f3f3;
+        padding: 1rem;
+        margin-bottom: 1rem;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .stRadio > div > label {
+        font-size: 1rem;
+        color: #d1d5db !important;
+        padding: 0.5rem;
+        border-radius: 8px;
+        transition: background 0.2s;
+    }
+    .stRadio > div > label:hover {
+        background: rgba(45,212,191,0.1);
     }
     .stProgress > div > div > div > div {
-        background: linear-gradient(90deg, #ff512f 0%, #dd2476 100%);
+        background: linear-gradient(90deg, #2dd4bf 0%, #22d3ee 100%);
     }
-    /* Dropdown (selectbox) text color and beautification */
+    /* Enhanced Selectbox Styling */
     .stSelectbox div[data-baseweb="select"] {
-        color: #f3f3f3 !important;
-        background: #232526 !important;
-        border: 2px solid #ff512f !important;
-        border-radius: 6px !important;
-        box-shadow: 0 1px 4px 0 rgba(221,36,118,0.10);
-        padding: 0.01em 0.5em !important;
-        font-size: 0.92em !important;
-        transition: border 0.2s;
-        min-height: 28px !important;
-        line-height: 1.1 !important;
+        background: #1e293b !important;
+        border: 2px solid #2dd4bf !important;
+        border-radius: 10px !important;
+        padding: 0.5rem !important;
+        font-size: 1rem !important;
+        transition: all 0.3s ease;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
     }
     .stSelectbox div[data-baseweb="select"]:hover {
-        border: 2px solid #dd2476 !important;
+        border-color: #22d3ee !important;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.2);
     }
-    .stSelectbox div[data-baseweb="select"] * {
-        color: #f3f3f3 !important;
-    }
-    .stSelectbox div[data-baseweb="select"] span {
-        color: #f3f3f3 !important;
+    .stSelectbox div[data-baseweb="select"] > div {
+        color: #d1d5db !important;
     }
     .stSelectbox .css-1dimb5e-singleValue {
-        color: #ff512f !important;
-        font-weight: bold !important;
-        font-size: 1.1em !important;
-        letter-spacing: 0.5px;
-        min-height: 24px !important;
-        line-height: 1.1 !important;
-        display: flex;
-        align-items: center;
+        color: #2dd4bf !important;
+        font-weight: 600 !important;
+        font-size: 1rem !important;
     }
     .stSelectbox .css-11unzgr {
-        background: #232526 !important;
+        background: #1e293b !important;
+        border-radius: 8px !important;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.2);
     }
     .stSelectbox .css-1n7v3ny-option {
-        color: #f3f3f3 !important;
-        background: #232526 !important;
-        border-radius: 8px !important;
-        margin: 2px 0;
-        padding: 8px 12px !important;
+        color: #d1d5db !important;
+        background: #1e293b !important;
+        padding: 0.75rem !important;
+        transition: all 0.2s;
     }
+    .stSelectbox .css-1n7v3ny-option:hover,
     .stSelectbox .css-1n7v3ny-option[aria-selected="true"] {
-        background: #ff512f !important;
+        background: #2dd4bf !important;
         color: #fff !important;
     }
-    /* Remove the dark card (main) background */
-    .main { background: none !important; box-shadow: none !important; padding: 0 !important; border-radius: 0 !important; color: inherit !important; }
+    .stSpinner > div {
+        color: #2dd4bf !important;
+    }
+    .stSuccess, .stError {
+        border-radius: 8px;
+        padding: 1rem;
+        margin-bottom: 1rem;
+    }
+    .stExpander {
+        background: #1e293b;
+        border-radius: 10px;
+        border: 1px solid #2dd4bf;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+    .stExpander > div > div {
+        color: #d1d5db !important;
+    }
     .footer {
         position: fixed;
         left: 0;
         bottom: 0;
         width: 100%;
-        background: rgba(30,32,38,0.85);
-        color: #f3f3f3;
+        background: rgba(15,23,42,0.9);
+        color: #d1d5db;
         text-align: center;
-        padding: 0.5em 0;
-        font-size: 1em;
+        padding: 0.75rem 0;
+        font-size: 0.9rem;
+        border-top: 1px solid #2dd4bf;
         z-index: 100;
-        border-top: 1px solid #333;
     }
-    a { color: #ff512f; text-decoration: none; }
-    a:hover { color: #dd2476; text-decoration: underline; }
+    a {
+        color: #2dd4bf;
+        text-decoration: none;
+    }
+    a:hover {
+        color: #22d3ee;
+        text-decoration: underline;
+    }
     </style>
 """, unsafe_allow_html=True)
 
 with st.container():
     st.title("🧠 Programming Quiz")
-    st.markdown("<h4 style='color:#ff512f;'>Test your programming knowledge with fun MCQs! 🚀</h4>", unsafe_allow_html=True)
+    st.markdown("<h4>Test your coding skills with interactive MCQs! 🚀</h4>", unsafe_allow_html=True)
 
 # Language selection
 languages = ["Python", "Java", "C++", "JavaScript", "C#", "Go", "Ruby", "PHP", "Swift"]
-selected_lang = st.selectbox("📘 Select your programming language:", languages)
+selected_lang = st.selectbox(
+    "📘 Choose a Programming Language:",
+    languages,
+    help="Select a language to start the quiz",
+    key="lang_select"
+)
 
-# Show the currently selected language
-st.markdown(f"<div style='font-size:1.2em; margin-bottom:1em; color:#ff512f;'><b>Selected Language:</b> {selected_lang}</div>", unsafe_allow_html=True)
+# Show the currently selected language with a subtle animation
+st.markdown(
+    f"<div style='font-size:1.1rem; margin:1rem 0; color:#2dd4bf; opacity:0; animation: fadeIn 0.5s ease forwards;'><b>Selected Language:</b> {selected_lang}</div>",
+    unsafe_allow_html=True
+)
+st.markdown("""
+    <style>
+    @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(10px); }
+        to { opacity: 1; transform: translateY(0); }
+    }
+    </style>
+""", unsafe_allow_html=True)
 
 # Reset session if language changes
 if "selected_lang" not in st.session_state:
@@ -183,31 +242,31 @@ if selected_lang != st.session_state.selected_lang:
 
 # Init session and load MCQs
 if "mcqs" not in st.session_state:
-    with st.spinner(f"Generating {selected_lang} quiz from LLM..."):
+    with st.spinner(f"Generating {selected_lang} quiz..."):
         raw_mcqs = get_mcqs_from_llm_cached(selected_lang)
         st.session_state.mcqs = parse_mcqs(raw_mcqs)
         st.session_state.score = 0
         st.session_state.current_q = 0
-        st.session_state.answers = []  # to store user answers
+        st.session_state.answers = []
 
 mcqs = st.session_state.mcqs
 current_q = st.session_state.current_q
 
 # --- Progress Bar ---
 progress = (current_q) / len(mcqs)
-st.progress(progress, text=f"Progress: {current_q} / {len(mcqs)}")
+st.progress(progress, text=f"Question {current_q+1} of {len(mcqs)}")
 
 # Main Quiz
 if current_q < len(mcqs):
     q = mcqs[current_q]
     st.subheader(f"Question {current_q+1} of {len(mcqs)}")
-    st.markdown(f"<b>{q['question']}</b>", unsafe_allow_html=True)
+    st.markdown(f"<div style='font-size:1.1rem; font-weight:600; margin-bottom:1rem;'>{q['question']}</div>", unsafe_allow_html=True)
 
     options = [f"{label}) {text}" for label, text in q['options']]
-    selected_option = st.radio("Choose one:", options, key=f"q{current_q}")
+    selected_option = st.radio("Choose one:", options, key=f"q{current_q}_{uuid.uuid4()}")
 
     if st.button("✅ Submit Answer"):
-        user_ans = selected_option[0]  # A/B/C/D
+        user_ans = selected_option[0]
         correct_ans = q["answer"]
 
         # Store user answer
@@ -219,10 +278,11 @@ if current_q < len(mcqs):
         })
 
         if user_ans == correct_ans:
-            st.success("✅ Correct!")
+            st.success("✅ Correct! Well done!")
             st.session_state.score += 1
         else:
-            st.error(f"❌ Wrong! Correct answer: {correct_ans})")
+            correct_text = next(text for label, text in q['options'] if label == correct_ans)
+            st.error(f"❌ Incorrect! The correct answer is {correct_ans}: {correct_text}")
 
         st.session_state.current_q += 1
         st.rerun()
@@ -230,7 +290,13 @@ if current_q < len(mcqs):
 # Result Screen
 else:
     st.balloons()
-    st.markdown(f"🎉 <b>Quiz Completed!</b> You got <span style='color:#ff512f;'>{st.session_state.score}</span> out of <span style='color:#ff512f;'>{len(mcqs)}</span> correct.", unsafe_allow_html=True)
+    st.markdown(
+        f"<div style='text-align:center; font-size:1.5rem; margin:1rem 0;'>"
+        f"🎉 <b>Quiz Completed!</b><br>"
+        f"You scored <span style='color:#2dd4bf;'>{st.session_state.score}</span> out of <span style='color:#2dd4bf;'>{len(mcqs)}</span> correct."
+        f"</div>",
+        unsafe_allow_html=True
+    )
 
     with st.expander("📋 View All Questions & Answers"):
         for idx, ans in enumerate(st.session_state.answers):
@@ -262,6 +328,6 @@ else:
 # --- Footer ---
 st.markdown("""
     <div class='footer'>
-        Made with ❤️ using <b>Streamlit</b> | <a href='https://github.com/your-github' target='_blank'>Your Name</a>
+      <b> Github | </b> <a href='https://github.com/Zuhairkhan13' target='_blank'>Zuhair Khan</a>
     </div>
 """, unsafe_allow_html=True)
